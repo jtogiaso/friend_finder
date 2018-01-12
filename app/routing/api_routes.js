@@ -4,7 +4,7 @@
 
 // Dependencies
 // =============================================================
-let friends = require("../public/js/friend.js");
+let friends = require("../data/friend.js");
 
 // Routes
 // =============================================================
@@ -18,23 +18,27 @@ module.exports = function(app) {
 
   app.post("/api/friends", function(req, res) {
 
-  	let newser_score = req.body.scores.reduce( (score , score_index) => parseInt(score) + parseInt(score_index) , 0 );
+  	let match_index = null;
+  	let smallest_diff = false;
 
-  	let users_scores = friends.map( friend => {
-  		return friend.scores.reduce( (score , score_index) => parseInt(score) + parseInt(score_index) , 0 );
-  	});
+  	let find_match_diff = (newser_array , matcher_array) => {
 
-  	let match_index = 0;
-  	let match_index_diff = Math.abs(newser_score - users_scores[0]);
-  	
-  	users_scores.slice(1).forEach( (user_score, index) => {
-  		let cur_diff = Math.abs(newser_score - user_score);
-  		if (  cur_diff < match_index_diff ){
-  			match_index = index + 1;
-  			match_index_diff = cur_diff;
+  		return matcher_array.reduce( (total , current_val , index) => {
+  			return total + (Math.abs(parseInt(current_val) - parseInt(newser_array[index])))
+  		}, 0);
+  	}
+
+  	friends.forEach( (friend, index) => {
+  		let curr_diff = find_match_diff(req.body.scores , friend.scores);
+  		if (isNaN(parseInt(smallest_diff))){
+  			match_index = index;
+  			smallest_diff = curr_diff;
   		}
+  		else if (curr_diff < smallest_diff) {
+  			match_index = index;
+  			smallest_diff = curr_diff;
+  		};
   	});
-
   	res.json(friends[match_index]);
   });
 
